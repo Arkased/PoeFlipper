@@ -1,9 +1,6 @@
 import csv
 import requests
 
-import predicates
-
-
 API_URL = 'http://api.poe.watch/'
 LEAGUE = 'Blight'
 
@@ -42,3 +39,13 @@ def filtered_div(pred):
 
     div = div_cards()
     return list(map(select, filter(pred, div)))
+
+
+# Predicates
+
+def price_pred(dic, floor, ceil):
+    try:
+        investment = dic['mean'] * dic['stackSize']
+        return floor <= investment <= ceil
+    except KeyError:
+        return False
