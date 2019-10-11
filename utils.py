@@ -5,6 +5,15 @@ API_URL = 'http://api.poe.watch/'
 LEAGUE = 'Blight'
 
 
+def save_dicts(dics: list):
+    """Saves a list of dictionaries DICS as a csv file."""
+    with open('out.csv', 'w', newline='') as f:
+        wtr = csv.writer(f)
+        wtr.writerow(dics[0].keys())
+        for dic in dics:
+            wtr.writerow(dic.values())
+
+
 def api(func, params):
     """Attempts to access the poe.watch API with function string FUNC and parameters dictionary PARAMS, returning the
     JSON value converted to python """
@@ -16,13 +25,9 @@ def api(func, params):
         print(result.status_code)
 
 
-def save_dicts(dics: list):
-    """Saves a list of dictionaries DICS as a csv file."""
-    with open('out.csv', 'w', newline='') as f:
-        wtr = csv.writer(f)
-        wtr.writerow(dics[0].keys())
-        for dic in dics:
-            wtr.writerow(dic.values())
+def item_price(id):
+    """Looks up the mean price of item ID"""
+    return api('item', {'id', id})['mean']
 
 
 def div_cards():
@@ -48,6 +53,7 @@ SELECTED_CARDS = open('div_cards.txt', 'r').read().splitlines()
 
 
 def price_pred(dic, floor, ceil):
+    """Test if investment of item DIC is within range FLOOR and CEIL"""
     try:
         investment = dic['mean'] * dic['stackSize']
         return floor <= investment <= ceil
@@ -56,6 +62,7 @@ def price_pred(dic, floor, ceil):
 
 
 def name_pred(dic):
+    """Test if item name of DIC is in div_cards.txt"""
     try:
         return dic['name'] in SELECTED_CARDS
     except KeyError:
