@@ -43,9 +43,20 @@ def filtered_div(pred):
 
 # Predicates
 
+
+SELECTED_CARDS = open('div_cards.txt', 'r').read().splitlines()
+
+
 def price_pred(dic, floor, ceil):
     try:
         investment = dic['mean'] * dic['stackSize']
         return floor <= investment <= ceil
+    except KeyError:
+        return False
+
+
+def name_pred(dic):
+    try:
+        return dic['name'] in SELECTED_CARDS
     except KeyError:
         return False
