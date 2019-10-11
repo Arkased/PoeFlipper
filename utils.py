@@ -31,8 +31,9 @@ def div_cards():
 
 
 def filtered_div(pred):
-    """Filters the div cards returned by div_cards() with some predicate PRED, and additionally selects the name,
-    stackSize, and mean columns."""
+    """Filters the div cards returned by div_cards() with some predicate PRED (which accepts a dictionary as an
+    argument and returns a boolean value corresponding to keeping or filtering out the card), and additionally selects
+    the name, stackSize, and mean columns."""
 
     def select(dic):
         return {entry: dic[entry] for entry in ['name', 'stackSize', 'mean']}
@@ -42,7 +43,6 @@ def filtered_div(pred):
 
 
 # Predicates
-
 
 SELECTED_CARDS = open('div_cards.txt', 'r').read().splitlines()
 
