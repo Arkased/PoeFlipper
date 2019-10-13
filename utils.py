@@ -35,16 +35,13 @@ def div_cards():
     return api('get', {'league': LEAGUE, 'category': 'card'})
 
 
-def filtered_div(pred):
-    """Filters the div cards returned by div_cards() with some predicate PRED (which accepts a dictionary as an
-    argument and returns a boolean value corresponding to keeping or filtering out the card), and additionally selects
-    the name, stackSize, and mean columns."""
+def trim_dics(dics):
+    """Selects the name, stackSize, and mean entries of each entry of DICS"""
 
     def select(dic):
         return {entry: dic[entry] for entry in ['name', 'stackSize', 'mean']}
 
-    div = div_cards()
-    return list(map(select, filter(pred, div)))
+    return list(map(select, dics))
 
 
 # Predicates
