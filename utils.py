@@ -35,9 +35,22 @@ def api(func, params):
         print(result.status_code)
 
 
-def item_price(id):
-    """Looks up the mean price of item ID"""
-    return api('itemhistory', {'id': id, 'league': LEAGUE})['mean']
+ITEM_DATA = api('compact', {'league': LEAGUE})
+
+
+def lookup_price(target_id, lower=0, upper=len(ITEM_DATA) - 1):
+    """Uses binary search to look up the mean price of item ID"""
+    i = (lower + upper) // 2  # the midpoint of the two bounds
+    current_id = ITEM_DATA[i]['id']  # id of the midpoint
+    if current_id == target_id:
+        return ITEM_DATA[i]['mean']
+    elif lower != upper:
+        if current_id < target_id:
+            return lookup_price(target_id, i, upper)
+        elif current_id > target_id:
+            return lookup_price(target_id, lower, i)
+
+    raise ValueError('item id', id, 'not found')
 
 
 def div_cards():
