@@ -15,9 +15,9 @@ def load_id_dic():
 ID_DIC = load_id_dic()
 
 
-def save_dicts(dics: list):
+def save_dicts(dics: list, filename='out.csv'):
     """Saves a list of dictionaries DICS as a csv file."""
-    with open('out.csv', 'w', newline='') as f:
+    with open(filename, 'w', newline='') as f:
         wtr = csv.writer(f)
         wtr.writerow(dics[0].keys())
         for dic in dics:

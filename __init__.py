@@ -13,11 +13,12 @@ divs = filter(utils.name_pred, divs)
 divs = utils.trim_dics(divs)
 
 for div in divs:
-    div['investment'] = div['mean'] * div['stackSize']
+    div['cost'] = div['mean'] * div['stackSize']
     div['returnId'] = utils.ID_DIC[div['name']]
-    div['return'] = utils.lookup_price(div['returnId'])
-    div['profit'] = (div['return'] - div['investment'])
+    div['revenue'] = utils.lookup_price(div['returnId'])
+    div['profit'] = (div['revenue'] - div['cost'])
     div['profitPerTrade'] = div['profit'] / (div['stackSize'] + 1)
-    div['yield'] = 1 + div['profit'] / div['investment']
+    div['yield'] = 1 + div['profit'] / div['cost']
 
-divs.sort(key=lambda d: abs(d['profitPerTrade']) * d['yield'])
+divs.sort(key=lambda d: -abs(d['profitPerTrade']) * d['yield'])
+utils.save_dicts(divs)
