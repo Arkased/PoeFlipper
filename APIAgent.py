@@ -48,6 +48,8 @@ class APIAgent(abc.ABC):
             for dic in self._data:
                 wtr.writerow(dic.values())
 
+    # API methods
+
     @classmethod
     @abc.abstractmethod
     def _api(cls, func, params):
@@ -70,24 +72,6 @@ class APIAgent(abc.ABC):
     def _fetch_all_data(self):
         """Fetches data on all items from API (of instantiating subclass)."""
         pass
-
-    def _lookup_price(self, target_id):
-        """Uses binary search to look up and return the current price of item with id TARGET_ID."""
-
-        def lookup_recursive(trgt_id, lower, upper):
-            i = (lower + upper) // 2  # the midpoint of the two bounds
-            current_id = self._item_data[i]['id']  # id of the midpoint
-            if lower > upper:
-                print('item id', id, 'not found in', self._league)
-                return 0
-            if current_id == trgt_id:
-                return self._item_data[i][self._mean_name]
-            elif current_id < trgt_id:
-                return lookup_recursive(trgt_id, i, upper)
-            elif current_id > trgt_id:
-                return lookup_recursive(trgt_id, lower, i)
-
-        return lookup_recursive(target_id, 0, len(self._item_data) - 1)
 
     # Operations on APIAgent.data
 
@@ -112,11 +96,30 @@ class APIAgent(abc.ABC):
         for div in self._data:
             div['investment'] = div[self._mean_name] * div['stackSize']
             div['returnId'] = self._id_dict[div['name']]
-            div['return'] = self._lookup_price(div['returnId'])
+            div['return'] = self._lookup_price(div['returnId'], div['name'])
             div['profit'] = (div['return'] - div['investment'])
             div['profitPerTrade'] = div['profit'] / (div['stackSize'] + 1)
             div['yield'] = 1 + div['profit'] / div['investment']
         self._data.sort(key=lambda d: d['profitPerTrade'] * d['yield'], reverse=True)
+
+    def _lookup_price(self, target_id, name):
+        """Uses binary search to look up and return the current price of item with id TARGET_ID."""
+
+        def lookup_recursive(lower, upper):
+            i = (lower + upper) // 2  # the midpoint of the two bounds
+            current_id = self._item_data[i]['id']  # id of the midpoint
+
+            if current_id == target_id:
+                return self._item_data[i][self._mean_name]
+            elif lower == upper:
+                print('item', name, 'with id', target_id, 'not found in', self._league)
+                return 0
+            elif current_id < target_id:
+                return lookup_recursive(i, upper)
+            elif current_id > target_id:
+                return lookup_recursive(lower, i)
+
+        return lookup_recursive(0, len(self._item_data) - 1)
 
 
 class WatchAPIAgent(APIAgent):
@@ -136,29 +139,28 @@ class WatchAPIAgent(APIAgent):
     def _fetch_div_data(self):
         return self._api('get', {'league': self._league, 'category': 'card'})
 
-# class NinjaAPIAgent(APIAgent):
-#     _mean_name = 'chaosValue'
-#     api_url = 'https://poe.ninja/api/Data/'
-#     # TODO: create file
-#     id_file = 'ninja_item_ids.csv'
-#     _id_dict: dict = APIAgent._load_id_dict(id_file)
-#     supported_cards = _id_dict.keys()
-#
-#     @classmethod
-#     def _api(cls, func, params):
-#         return super()._api(func, params)['lines']
-#
-#     def _fetch_all_data(self):
-#         # TODO: Implement support for currencies and fragments (different format)
-#         # TODO: Update APIs
-#         with open('ninja_apis.csv', 'r', newline='') as f:
-#             reader = csv.reader(f, delimiter=',')
-#             funcs = [item for sublist in reader for item in sublist]
-#         all_data = []
-#         for func in funcs:
-#             all_data.extend(self._api(func, {'league': self._league}))
-#         all_data.sort(key=lambda dic: dic['id'])
-#         return all_data
-#
-#     def _fetch_div_data(self):
-#         return self._api('GetDivinationCardsOverview', {'league': self._league})
+
+class NinjaAPIAgent(APIAgent):
+    _mean_name = 'chaosValue'
+    _api_url = 'https://poe.ninja/api/Data/'
+    _id_file = 'ninja_item_ids.csv'
+    _id_dict: dict = APIAgent._load_id_dict(_id_file)
+    _supported_cards = _id_dict.keys()
+
+    @classmethod
+    def _api(cls, func, params):
+        return super()._api(func, params)['lines']
+
+    def _fetch_all_data(self):
+        with open('ninja_itemoverview_types.csv', 'r', newline='') as f:
+            reader = csv.reader(f, delimiter=',')
+            types = [item for sublist in reader for item in sublist]
+        all_data = []
+        for func in types:
+            all_data.extend(self._api('itemoverview', {'league': self._league, 'type': func}))
+        # TODO: Implement support for currencies and fragments (different format) here
+        all_data.sort(key=lambda dic: dic['id'])
+        return all_data
+
+    def _fetch_div_data(self):
+        return self._api('GetDivinationCardsOverview', {'league': self._league})
