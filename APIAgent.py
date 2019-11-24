@@ -2,8 +2,6 @@ import csv
 import requests
 import abc
 
-SELECTED_CARDS = open('div_cards.txt', 'r').read().splitlines()
-
 
 # noinspection PyBroadException
 class APIAgent(abc.ABC):
@@ -32,10 +30,6 @@ class APIAgent(abc.ABC):
         self._filter_name()
         self._item_data = self._fetch_all_data()
         self._trim_data()
-
-    @classmethod
-    def _set_id_dict(cls):
-        cls._id_dict = cls._load_id_dict()
 
     @staticmethod
     def _load_id_dict(file_name):

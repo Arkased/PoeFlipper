@@ -11,7 +11,7 @@ league = 'Blight'
 
 agent = APIAgent.WatchAPIAgent(league)
 # agent = APIAgent.NinjaAPIAgent(league)
-agent.filter_price()
+# agent.filter_price()
 
 agent.calculate_profit()
 agent.save_data()
