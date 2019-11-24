@@ -31,12 +31,17 @@ class APIAgent(abc.ABC):
         self._data = self._fetch_div_data()
         self._filter_name()
         self._item_data = self._fetch_all_data()
+        self._trim_data()
 
     @classmethod
-    def _load_id_dict(cls):
+    def _set_id_dict(cls):
+        cls._id_dict = cls._load_id_dict()
+
+    @staticmethod
+    def _load_id_dict(file_name):
         """Loads and returns a dictionary of the supported div cards and the item ids of their rewards"""
         # TODO: implement functionality to support rewards containing stacks of items
-        with open(cls._id_file, 'r', newline='') as f:
+        with open(file_name, 'r', newline='') as f:
             reader = csv.reader(f, delimiter=',')
             id_dic = {row[0]: int(row[1]) for row in reader}
         return id_dic
@@ -111,22 +116,21 @@ class APIAgent(abc.ABC):
     def calculate_profit(self):
         """Performs various calculations on self.data and sorts the results based on profit/trade and yield."""
         for div in self._data:
-            print(len(self._item_data))
             div['investment'] = div[self._mean_name] * div['stackSize']
             div['returnId'] = self._id_dict[div['name']]
             div['return'] = self._lookup_price(div['returnId'])
             div['profit'] = (div['return'] - div['investment'])
             div['profitPerTrade'] = div['profit'] / (div['stackSize'] + 1)
             div['yield'] = 1 + div['profit'] / div['investment']
-        self._data.sort(key=lambda d: d['profitPerTrade'] * d['yield'])
+        self._data.sort(key=lambda d: d['profitPerTrade'] * d['yield'], reverse=True)
 
 
 class WatchAPIAgent(APIAgent):
     _mean_name = 'mean'
-    api_url = 'http://api.poe.watch/'
-    id_file = 'watch_item_ids.csv'
-    _id_dict: dict = WatchAPIAgent._load_id_dict()
-    supported_cards = _id_dict.keys()
+    _api_url = 'http://api.poe.watch/'
+    _id_file = 'watch_item_ids.csv'
+    _id_dict: dict = APIAgent._load_id_dict(_id_file)
+    _supported_cards = _id_dict.keys()
 
     @classmethod
     def _api(cls, func, params):
@@ -138,30 +142,29 @@ class WatchAPIAgent(APIAgent):
     def _fetch_div_data(self):
         return self._api('get', {'league': self._league, 'category': 'card'})
 
-
-class NinjaAPIAgent(APIAgent):
-    _mean_name = 'chaosValue'
-    api_url = 'https://poe.ninja/api/Data/'
-    # TODO: create file
-    id_file = 'ninja_item_ids.csv'
-    _id_dict: dict = NinjaAPIAgent._load_id_dict()
-    supported_cards = _id_dict.keys()
-
-    @classmethod
-    def _api(cls, func, params):
-        return super()._api(func, params)['lines']
-
-    def _fetch_all_data(self):
-        # TODO: Implement support for currencies and fragments (different format)
-        # TODO: Update APIs
-        with open('ninja_apis.csv', 'r', newline='') as f:
-            reader = csv.reader(f, delimiter=',')
-            funcs = [item for sublist in reader for item in sublist]
-        all_data = []
-        for func in funcs:
-            all_data.extend(self._api(func, {'league': self._league}))
-        all_data.sort(key=lambda dic: dic['id'])
-        return all_data
-
-    def _fetch_div_data(self):
-        return self._api('GetDivinationCardsOverview', {'league': self._league})
+# class NinjaAPIAgent(APIAgent):
+#     _mean_name = 'chaosValue'
+#     api_url = 'https://poe.ninja/api/Data/'
+#     # TODO: create file
+#     id_file = 'ninja_item_ids.csv'
+#     _id_dict: dict = APIAgent._load_id_dict(id_file)
+#     supported_cards = _id_dict.keys()
+#
+#     @classmethod
+#     def _api(cls, func, params):
+#         return super()._api(func, params)['lines']
+#
+#     def _fetch_all_data(self):
+#         # TODO: Implement support for currencies and fragments (different format)
+#         # TODO: Update APIs
+#         with open('ninja_apis.csv', 'r', newline='') as f:
+#             reader = csv.reader(f, delimiter=',')
+#             funcs = [item for sublist in reader for item in sublist]
+#         all_data = []
+#         for func in funcs:
+#             all_data.extend(self._api(func, {'league': self._league}))
+#         all_data.sort(key=lambda dic: dic['id'])
+#         return all_data
+#
+#     def _fetch_div_data(self):
+#         return self._api('GetDivinationCardsOverview', {'league': self._league})
