@@ -115,6 +115,8 @@ class APIAgent(abc.ABC):
                 print('item', name, 'with id', target_id, 'not found in', self._league)
                 return 0
             elif current_id < target_id:
+                if upper - lower == 1:
+                    i += 1
                 return lookup_recursive(i, upper)
             elif current_id > target_id:
                 return lookup_recursive(lower, i)
